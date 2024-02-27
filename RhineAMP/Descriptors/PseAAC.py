@@ -3,11 +3,10 @@ import json
 import math
 
 import pandas
+from pkg_resources import resource_filename
 
 # First Party Library
 from RhineAMP.Descriptors.AAC import AAC
-
-from pkg_resources import resource_filename
 
 
 def _normalize_property(Properties: pandas.Series) -> pandas.Series:
@@ -57,11 +56,13 @@ def _normalized_aac(Protein_Sequence: str) -> pandas.Series:
 
 def PseAAC(Protein_Sequence: str,
            Lambda: int,
-           weight: float = 0.05) -> pandas.Series:
+           weight: float = 0.05,
+           properties=None) -> pandas.Series:
     """
     calculate the PseAAC of the given Protein Sequence.
     The used amino acid properties in this function is hydrophobicity, hydrophilicity
     and residue mass
+    :param properties:
     :param Protein_Sequence:
         str,uppercase
     :param Lambda:
@@ -75,13 +76,14 @@ def PseAAC(Protein_Sequence: str,
     """
 
     # param validation
-    properties = (hydrophobicity, hydrophilicity, residuemass)
     Protein_Length = len(Protein_Sequence)
     if Protein_Length <= Lambda:
         raise Exception("Protein_Length should be larger than Lambda, Lambda larger instead")
+
     PseAAC_series = pandas.Series([0] * (20 + Lambda), dtype=float,
                                   index=["PseAAC" + str(i + 1) for i in range(20 + Lambda)])
     aac = _normalized_aac(Protein_Sequence)
+
     sum_of_theta = 0
     for i in range(1, Lambda + 1):
         sum_of_theta += _get_correlation_factor(Protein_Sequence, i, properties)
@@ -94,12 +96,14 @@ def PseAAC(Protein_Sequence: str,
 
 
 def PseAAC_Amphiphilic(Protein_Sequence: str,
-                       Lambda: int,
-                       weight: float = 0.05) -> pandas.Series:
+                       Lambda: int = 30,
+                       weight: float = 0.05,
+                       properties=None) -> pandas.Series:
     """
     calculate the PseAAC of the given Protein Sequence.
     The used amino acid properties in this function is hydrophobicity, hydrophilicity
     and residue mass
+    :param properties:
     :param Protein_Sequence:
         str,uppercase
     :param Lambda:
@@ -113,38 +117,80 @@ def PseAAC_Amphiphilic(Protein_Sequence: str,
     """
 
     # param validation
-    properties = (pI, pK1, pK2)
+    if properties is None:
+        properties = [0, 1]
+    properties_num = len(properties)
     Protein_Length = len(Protein_Sequence)
     if Protein_Length <= Lambda:
         raise Exception("Protein_Length should be larger than Lambda, Lambda larger instead")
-    PseAAC_series = pandas.Series([0] * (20 + Lambda), dtype=float,
-                                  index=["PseAAC" + str(i + 1) for i in range(20 + Lambda)])
+
+    PseAAC_series = pandas.Series([0] * (20 + Lambda * properties_num), dtype=float,
+                                  index=["PseAAC" + str(i + 1) for i in range(20 + Lambda*properties_num)])
     aac = _normalized_aac(Protein_Sequence)
-    sum_of_theta = 0
-    for i in range(1, Lambda + 1):
-        sum_of_theta += _get_correlation_factor(Protein_Sequence, i, properties)
-    numerator = 1 + weight * sum_of_theta
-    PseAAC_series[0:20] = aac / numerator * 100
-    for i in range(20, Lambda + 20):
-        PseAAC_series[i] = (weight * _get_correlation_factor(Protein_Sequence, i - 19, properties)) \
-                           / numerator * 100
+
+    tau = _get_correlation_factor_Amphiphilic(Protein_Sequence=Protein_Sequence,
+                                              Lambda=Lambda,
+                                              properties=properties)
+    tau_sum = tau.sum()
+    # print(tau_sum)
+    # print(aac)
+    numerator = 1 + weight * tau_sum
+    # print(numerator)
+    PseAAC_series[0:20] = aac/numerator*100
+    PseAAC_series[20:20 + Lambda * properties_num] = weight*tau/numerator*100
+    # print(tau)
     return PseAAC_series
 
 
 def _get_correlation_function(Ri: str, Rj: str,
-                              properties: pandas.Series = (hydrophobicity, hydrophilicity, residuemass)):
+                              properties=None):
     """
     get the correlation function between Ri and Rj.
     :param Ri:
     :param Rj:
     :return:
     """
-    property_1 = properties[0]
-    property_2 = properties[1]
-    property_3 = properties[2]
-    return (math.pow(property_1[Ri] - property_1[Rj], 2) +
-            math.pow(property_2[Ri] - property_2[Rj], 2) +
-            math.pow(property_3[Ri] - property_3[Rj], 2)) / 3
+    if properties is None:
+        properties = [0, 1, 2]
+    property_num = len(properties)
+    properties_all = [hydrophilicity, hydrophobicity, residuemass, pI, pK1, pK2]
+    res = 0.0
+    for i in properties:
+        res += math.pow(properties_all[i][Ri] - properties_all[i][Rj], 2)
+    return res / property_num
+
+
+def _get_correlation_factor_Amphiphilic(Protein_Sequence: str,
+                                                properties,
+                                                Lambda)->pandas.Series:
+    if properties is None:
+        properties = [0, 1]
+    properties_all = [hydrophilicity, hydrophobicity, residuemass, pI, pK1, pK2]
+    res_pandas = pandas.Series([0]*Lambda*len(properties),dtype=float)
+    Protein_Length = len(Protein_Sequence)
+    for i in range(Lambda):
+        for j in range(len(properties)):
+            res_pandas[i*len(properties)+j] = _sum_of_H(Protein_Sequence,tier=i+1,property=properties_all[properties[j]])/(Protein_Length-i-1)
+    return res_pandas
+def _sum_of_H(Protein_Sequence:str,tier:int,property:pandas.Series)->float:
+    """
+    求sumH
+    :param Protein_Sequence:
+    :param tier:
+    :param property:
+    :return:
+    """
+    Protein_Length = len(Protein_Sequence)
+    res = 0.0
+    for i in range(0,Protein_Length-tier):
+        """
+        ABCDEFG TIER=1 LENGTH=7
+        """
+        j = i + tier
+        Ri = Protein_Sequence[i]
+        Rj = Protein_Sequence[j]
+        res = res + property[Ri]*property[Rj]
+    return res
 
 
 def _get_correlation_factor(Protein_Sequence: str, tier: int, properties):
