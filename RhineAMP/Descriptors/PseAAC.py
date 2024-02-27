@@ -125,7 +125,7 @@ def PseAAC_Amphiphilic(Protein_Sequence: str,
         raise Exception("Protein_Length should be larger than Lambda, Lambda larger instead")
 
     PseAAC_series = pandas.Series([0] * (20 + Lambda * properties_num), dtype=float,
-                                  index=["PseAAC" + str(i + 1) for i in range(20 + Lambda*properties_num)])
+                                  index=["PseAAC" + str(i + 1) for i in range(20 + Lambda * properties_num)])
     aac = _normalized_aac(Protein_Sequence)
 
     tau = _get_correlation_factor_Amphiphilic(Protein_Sequence=Protein_Sequence,
@@ -136,8 +136,8 @@ def PseAAC_Amphiphilic(Protein_Sequence: str,
     # print(aac)
     numerator = 1 + weight * tau_sum
     # print(numerator)
-    PseAAC_series[0:20] = aac/numerator*100
-    PseAAC_series[20:20 + Lambda * properties_num] = weight*tau/numerator*100
+    PseAAC_series[0:20] = aac / numerator * 100
+    PseAAC_series[20:20 + Lambda * properties_num] = weight * tau / numerator * 100
     # print(tau)
     return PseAAC_series
 
@@ -161,18 +161,22 @@ def _get_correlation_function(Ri: str, Rj: str,
 
 
 def _get_correlation_factor_Amphiphilic(Protein_Sequence: str,
-                                                properties,
-                                                Lambda)->pandas.Series:
+                                        properties,
+                                        Lambda) -> pandas.Series:
     if properties is None:
         properties = [0, 1]
     properties_all = [hydrophilicity, hydrophobicity, residuemass, pI, pK1, pK2]
-    res_pandas = pandas.Series([0]*Lambda*len(properties),dtype=float)
+    res_pandas = pandas.Series([0] * Lambda * len(properties), dtype=float)
     Protein_Length = len(Protein_Sequence)
     for i in range(Lambda):
         for j in range(len(properties)):
-            res_pandas[i*len(properties)+j] = _sum_of_H(Protein_Sequence,tier=i+1,property=properties_all[properties[j]])/(Protein_Length-i-1)
+            res_pandas[i * len(properties) + j] = _sum_of_H(Protein_Sequence, tier=i + 1,
+                                                            property=properties_all[properties[j]]) / (
+                                                              Protein_Length - i - 1)
     return res_pandas
-def _sum_of_H(Protein_Sequence:str,tier:int,property:pandas.Series)->float:
+
+
+def _sum_of_H(Protein_Sequence: str, tier: int, property: pandas.Series) -> float:
     """
     求sumH
     :param Protein_Sequence:
@@ -182,14 +186,14 @@ def _sum_of_H(Protein_Sequence:str,tier:int,property:pandas.Series)->float:
     """
     Protein_Length = len(Protein_Sequence)
     res = 0.0
-    for i in range(0,Protein_Length-tier):
+    for i in range(0, Protein_Length - tier):
         """
         ABCDEFG TIER=1 LENGTH=7
         """
         j = i + tier
         Ri = Protein_Sequence[i]
         Rj = Protein_Sequence[j]
-        res = res + property[Ri]*property[Rj]
+        res = res + property[Ri] * property[Rj]
     return res
 
 
