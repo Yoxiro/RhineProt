@@ -54,16 +54,26 @@ def _pairs_sum(Protein_Sequence: str, Squence: pandas.Series) -> numpy.ndarray:
 
 def _psai(Protein_Sequence: str, Sequence: pandas.Series) -> numpy.ndarray:
     single = _single()
-    psai = numpy.array([[0]*(len(Protein_Sequence)+1)]*3,
-                       dtype = float)
+    psai = numpy.array([[0] * (len(Protein_Sequence) + 1)] * 3,
+                       dtype=float)
     pairs_sum = _pairs_sum(Protein_Sequence, Sequence)
     for i in range(len(Protein_Sequence)):
         position = numpy.array(Protein_Sequence[i] == Sequence)
-        position = numpy.repeat(position[numpy.newaxis,:],repeats=3, axis=0)
+        position = numpy.repeat(position[numpy.newaxis, :], repeats=3, axis=0)
         phi = position * single
-        phi = phi.sum(axis = 1)
-        psai[:,i+1] = psai[:,i] + phi + pairs_sum
+        phi = phi.sum(axis=1)
+        psai[:, i + 1] = psai[:, i] + phi + pairs_sum
     return psai
+
+
+def _euclidean(psai: numpy.ndarray) -> numpy.ndarray:
+    psai_after = psai[:, 1:] - psai[:, :-1]
+    psai_after = psai_after * psai_after
+    psai_after = psai_after.sum(axis=0)
+    psai_sqrt = numpy.sqrt(psai_after)[1:]
+    return psai_sqrt
+
+
 def _sort(file=None) -> pandas.DataFrame:
     """"""
     if file is None:
