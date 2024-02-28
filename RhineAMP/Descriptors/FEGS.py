@@ -8,6 +8,9 @@ import pandas
 
 from pkg_resources import resource_filename
 
+from RhineAMP.Descriptors.AAC import AAC
+from RhineAMP.Descriptors.DPC import DPC_2D_array
+
 
 def _single() -> numpy.ndarray:
     """
@@ -27,12 +30,41 @@ def _pairs(single: numpy.ndarray) -> numpy.ndarray:
     return pairs
 
 
-def _psai(Protein_Sequence: str) -> numpy.ndarray:
+def _pairs_sum(Protein_Sequence: str, Squence: pandas.Series) -> numpy.ndarray:
+    """
+
+    :param Protein_Sequence:
+    :param Squence: AAINDEX_Seq.iloc[:,i]
+    :return:
+    """
+    # to generate pairs
     single = _single()
     pairs = _pairs(single=single)
+    # to generate dpc in 3 20 20
+    dpc = DPC_2D_array(Protein_Sequence)
+    dpc = dpc.reindex(index=Squence)
+    dpc = dpc[Squence]
+    dpc_array = numpy.array(dpc)
+    dpc_array = numpy.repeat(dpc_array[numpy.newaxis, :, :], repeats=3, axis=0)
+    # to generate sum pairs
+    sum_pairs = dpc_array * pairs
+    sum_pairs = sum_pairs.sum(axis=1).sum(axis=1)
+    return sum_pairs
 
 
-def _sort(file=None) -> pandas.core.frame.DataFrame:
+def _psai(Protein_Sequence: str, Sequence: pandas.Series) -> numpy.ndarray:
+    single = _single()
+    psai = numpy.array([[0]*(len(Protein_Sequence)+1)]*3,
+                       dtype = float)
+    pairs_sum = _pairs_sum(Protein_Sequence, Sequence)
+    for i in range(len(Protein_Sequence)):
+        position = numpy.array(Protein_Sequence[i] == Sequence)
+        position = numpy.repeat(position[numpy.newaxis,:],repeats=3, axis=0)
+        phi = position * single
+        phi = phi.sum(axis = 1)
+        psai[:,i+1] = psai[:,i] + phi + pairs_sum
+    return psai
+def _sort(file=None) -> pandas.DataFrame:
     """"""
     if file is None:
         file = resource_filename(__name__, "Data/AAINDEX.csv")
