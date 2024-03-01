@@ -9,7 +9,7 @@ from RhineAMP.Descriptors.DPC import DPC_2D_array, DPC
 
 """
 import os 
-os.chdir(r"F:\code\RhineAMP\RhineAMP\Descriptors")
+os.chdir("F:\\code\\RhineAMP\\RhineAMP\\Descriptors")
 """
 
 
@@ -36,11 +36,11 @@ def _pairs(single: numpy.ndarray) -> numpy.ndarray:
     return pairs
 
 
-def _pairs_sum(Protein_Sequence: str, Squence: pandas.Series) -> numpy.ndarray:
+def _pairs_sum(Protein_Sequence: str, Sequence: pandas.Series) -> numpy.ndarray:
     """
 
     :param Protein_Sequence:
-    :param Squence: AAINDEX_Seq.iloc[:,i]
+    :param Sequence: AAINDEX_Seq.iloc[:,i]
     :return:
     """
     # to generate pairs
@@ -48,8 +48,8 @@ def _pairs_sum(Protein_Sequence: str, Squence: pandas.Series) -> numpy.ndarray:
     pairs = _pairs(single=single)
     # to generate dpc in 3 20 20
     dpc = DPC_2D_array(Protein_Sequence)
-    dpc = dpc.reindex(index=Squence)
-    dpc = dpc[Squence]
+    dpc = dpc.reindex(index=Sequence)
+    dpc = dpc[Sequence]
     dpc_array = numpy.array(dpc)
     dpc_array = numpy.repeat(dpc_array[numpy.newaxis, :, :], repeats=3, axis=0)
     # to generate sum pairs
@@ -177,8 +177,3 @@ def _sort(file=None) -> pandas.DataFrame:
         AAINDEX_Series_After = AAINDEX_Series.sort_values()
         AAINDEX_Seq.iloc[:, coli] = AAINDEX_Series_After.index
     return AAINDEX_Seq
-
-
-if __name__ == "__main__":
-    Protein_Sequence = "LLGDFFRKSKEKIGKEFKRIVQRIKDFLRNLVPRTESA"
-    _sort()
