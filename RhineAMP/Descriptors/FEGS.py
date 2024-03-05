@@ -18,6 +18,12 @@ def _single() -> numpy.ndarray:
 
     :return:
     """
+    """
+    single = numpy.asarray([[math.cos(2 * math.pi / 20 * i),
+                           math.sin(2 * math.pi / 20 * i),
+                           1] for i in range(1, 21)],
+                         dtype=float).transpose()
+    """
     return numpy.asarray([[math.cos(2 * math.pi / 20 * i),
                            math.sin(2 * math.pi / 20 * i),
                            1] for i in range(1, 21)],
@@ -36,7 +42,7 @@ def _pairs(single: numpy.ndarray) -> numpy.ndarray:
     return pairs
 
 
-def _pairs_sum(Protein_Sequence: str, Sequence: pandas.Series) -> numpy.ndarray:
+def _pairs_sum(Protein_Sequence: str, Sequence: pandas.Series,pairs) -> numpy.ndarray:
     """
 
     :param Protein_Sequence:
@@ -44,8 +50,6 @@ def _pairs_sum(Protein_Sequence: str, Sequence: pandas.Series) -> numpy.ndarray:
     :return:
     """
     # to generate pairs
-    single = _single()
-    pairs = _pairs(single=single)
     # to generate dpc in 3 20 20
     dpc = DPC_2D_array(Protein_Sequence)
     dpc = dpc.reindex(index=Sequence)
@@ -55,25 +59,34 @@ def _pairs_sum(Protein_Sequence: str, Sequence: pandas.Series) -> numpy.ndarray:
     # to generate sum pairs
     sum_pairs = dpc_array * pairs
     sum_pairs = sum_pairs.sum(axis=1).sum(axis=1)
+    # print(sum_pairs)
     return sum_pairs
 
 
 def _psai(Protein_Sequence: str, Sequence: pandas.Series) -> numpy.ndarray:
     """
-
-    :param Protein_Sequence:
+    Sequence = AAINDEX_Seq.iloc[:,0]
+    Protein_Sequence = "AAYLLAKINLKALAALAKKIL"
+    :param Protein_Sequence:"AAYLLAKINLKALAALAKKIL"
     :param Sequence:
     :return:
     """
     single = _single()
+    pairs = _pairs(single=single)
     psai = numpy.array([[0] * (len(Protein_Sequence) + 1)] * 3,
                        dtype=float)
-    pairs_sum = _pairs_sum(Protein_Sequence, Sequence)
     for i in range(len(Protein_Sequence)):
         position = numpy.array(Protein_Sequence[i] == Sequence)
         position = numpy.repeat(position[numpy.newaxis, :], repeats=3, axis=0)
         phi = position * single
         phi = phi.sum(axis=1)
+        if i == 0:
+            pairs_sum =0
+        else:
+            # each time the index of Protein Sequence changed,the dpc of the Peptide
+            # is recalculated, this is a point to be improved.
+            pairs_sum = _pairs_sum(Protein_Sequence[:i + 1],Sequence,pairs)
+        # print(pairs_sum)
         psai[:, i + 1] = psai[:, i] + phi + pairs_sum
     return psai
 
@@ -108,7 +121,7 @@ def _generating_M(Protein_Sequence: str, Sequence: pandas.Series):
     return M
 
 
-def eigenvalue(M: numpy.ndarray):
+def _eigenvalue(M: numpy.ndarray):
     """
 
     :param M:
@@ -130,7 +143,7 @@ def FEGS(Protein_Sequence: str) -> pandas.Series:
     for i in range(AAINDEX_Seq.shape[1]):
         Sequence = AAINDEX_Seq.iloc[:, i]
         M = _generating_M(Protein_Sequence, Sequence)
-        eigenvalues = eigenvalue(M)
+        eigenvalues = _eigenvalue(M)
         eigenvalue_list.append(eigenvalues)
     eigenvalue_Series = pandas.Series(eigenvalue_list,
                                       index=["FEGS" + str(i + 1) for i in range(len(eigenvalue_list))])
@@ -161,7 +174,7 @@ def _sum_of_euclidean(euclidean: numpy.ndarray) -> numpy.ndarray:
 
 def _sort(file=None) -> pandas.DataFrame:
     """
-
+    
     :param file:
     :return:
     """

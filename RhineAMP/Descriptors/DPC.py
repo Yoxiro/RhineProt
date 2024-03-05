@@ -38,6 +38,6 @@ def DPC_2D_array(Protein_Sequence:str)-> pandas.DataFrame:
         chars = Protein_Sequence[char_index:char_index + 2]
         if chars not in index_string_after:
             raise Exception("Invalid amino acid symbols")
-        dpc_array[Protein_Sequence[char_index]][Protein_Sequence[char_index+1]] += 1
-    
-    return dpc_array/400
+        dpc_array.loc[Protein_Sequence[char_index],Protein_Sequence[char_index+1]] += 1
+    dpc_array = dpc_array/(len(Protein_Sequence) - 1)
+    return dpc_array
