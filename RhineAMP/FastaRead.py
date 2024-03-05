@@ -1,7 +1,7 @@
 import pandas
 def FastaRead(Filepath:str)->pandas.DataFrame:
     """
-    Read Protein_Sequences from fasta file
+    Read Protein_Sequences from fasta file and Return the DataFrame with "header","sequence","sequence_length"
     :param Filepath:
     :return:
     """
