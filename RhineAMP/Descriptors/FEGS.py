@@ -42,7 +42,7 @@ def _pairs(single: numpy.ndarray) -> numpy.ndarray:
     return pairs
 
 
-def _pairs_sum(Protein_Sequence: str, Sequence: pandas.Series,pairs) -> numpy.ndarray:
+def _pairs_sum(Protein_Sequence: str, Sequence: pandas.Series, pairs) -> numpy.ndarray:
     """
 
     :param Protein_Sequence:
@@ -71,24 +71,37 @@ def _psai(Protein_Sequence: str, Sequence: pandas.Series) -> numpy.ndarray:
     :param Sequence:
     :return:
     """
+    # now_time = time.time()
     single = _single()
     pairs = _pairs(single=single)
     psai = numpy.array([[0] * (len(Protein_Sequence) + 1)] * 3,
                        dtype=float)
+    pairs_sum_modify = _pairs_sum_modify(Protein_Sequence, Sequence, pairs)
     for i in range(len(Protein_Sequence)):
         position = numpy.array(Protein_Sequence[i] == Sequence)
         position = numpy.repeat(position[numpy.newaxis, :], repeats=3, axis=0)
         phi = position * single
         phi = phi.sum(axis=1)
-        if i == 0:
-            pairs_sum =0
-        else:
-            # each time the index of Protein Sequence changed,the dpc of the Peptide
-            # is recalculated, this is a point to be improved.
-            pairs_sum = _pairs_sum(Protein_Sequence[:i + 1],Sequence,pairs)
-        # print(pairs_sum)
+        pairs_sum = pairs_sum_modify[i]
         psai[:, i + 1] = psai[:, i] + phi + pairs_sum
     return psai
+
+
+def _pairs_sum_modify(Protein_Sequence, Sequence, pairs):
+    char2index = Sequence.to_dict()
+    char2index = dict(zip(char2index.values(), char2index.keys()))
+    # print(char2index)
+    Protein_Sequence_list = list(Protein_Sequence)
+    Protein_Sequence_index = list(map(lambda x: char2index[x], Protein_Sequence_list))
+    dpc = numpy.array([[[0.0] * 20] * 20] * 3, dtype=float)
+
+    res = numpy.array([[0, 0, 0] for _ in range(len(Protein_Sequence))], dtype=float)
+    for i in range(len(Protein_Sequence_index[:-1])):
+        dpc[:, Protein_Sequence_index[i] - 1, Protein_Sequence_index[i + 1] - 1] += 1
+        sum_pairs = dpc * pairs / (i + 1)
+        sum_pairs = sum_pairs.sum(axis=1).sum(axis=1)
+        res[i + 1] = sum_pairs
+    return res
 
 
 def _euclidean(psai: numpy.ndarray) -> numpy.ndarray:
@@ -132,13 +145,20 @@ def _eigenvalue(M: numpy.ndarray):
     return leading_eigenvalue
 
 
-def FEGS(Protein_Sequence: str) -> pandas.Series:
+def FEGS(Protein_Sequence: str, header: str = None) -> pandas.Series:
     """
 
+    :param header:
     :param Protein_Sequence:
     :return:
     """
+    if header is None:
+        header = "0"
+    # now_time = time.time()
     AAINDEX_Seq = _sort()
+    # after_time = time.time()
+    # print(after_time-now_time)
+    # now_time = after_time
     eigenvalue_list = []
     for i in range(AAINDEX_Seq.shape[1]):
         Sequence = AAINDEX_Seq.iloc[:, i]
@@ -148,9 +168,22 @@ def FEGS(Protein_Sequence: str) -> pandas.Series:
     eigenvalue_Series = pandas.Series(eigenvalue_list,
                                       index=["FEGS" + str(i + 1) for i in range(len(eigenvalue_list))])
     eigenvalue_Series = eigenvalue_Series / len(Protein_Sequence)
+    # after_time = time.time()
+    # print(after_time - now_time)
+    # now_time = after_time
     dpc = DPC(Protein_Sequence)
+    # after_time = time.time()
+    # print(after_time - now_time)
+    # now_time = after_time
     aac = AAC(Protein_Sequence)
+    # after_time = time.time()
+    # print(after_time - now_time)
+    # now_time = after_time
     fegs = pandas.concat([eigenvalue_Series, dpc, aac])
+    # after_time = time.time()
+    # print(after_time - now_time)
+    # now_time = after_time
+    fegs.name = header
     return fegs
 
 

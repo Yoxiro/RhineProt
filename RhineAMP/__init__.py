@@ -6,3 +6,5 @@ from RhineAMP.FastaRead import FastaRead
 from RhineAMP.FastaClean import FastaClean
 from RhineAMP.FastaSave import FastaSave
 from RhineAMP.FastaFilter import FastaFilter
+from RhineAMP.SaveAfterRun import SaveAfterRun
+from RhineAMP.Sequences import Sequences
