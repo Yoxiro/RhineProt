@@ -8,3 +8,4 @@ from RhineAMP.FastaSave import FastaSave
 from RhineAMP.FastaFilter import FastaFilter
 from RhineAMP.SaveAfterRun import SaveAfterRun
 from RhineAMP.Sequences import Sequences
+from RhineAMP.Test import test

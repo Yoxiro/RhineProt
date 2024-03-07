@@ -9,6 +9,12 @@ def _FEGS_buffer(args: list):
     return RhineAMP.FEGS(sequence, header)
 
 
+def _AAC_Buffer(args: list):
+    header = args[0]
+    sequence = args[1]
+    return RhineAMP.AAC(sequence, header)
+
+
 class Sequences:
 
     def __init__(self):
@@ -18,7 +24,26 @@ class Sequences:
     def LoadFromFasta(self, filepath):
         self._Protein_Sequences = RhineAMP.FastaRead(filepath)
 
-    def FEGS(self, core: int = None, save_result: bool = True, filepath=None):
+    def AAC(self,
+            core: int = 1,
+            save_result: bool = True,
+            filepath=None):
+        """
+
+        :param enable_multiprocessing: whether able Multiprocessing
+        :param core: the core to be used if Multiprocessing is enabled
+        :param save_result: whether save the result
+        :param filepath: the filepath
+        :return: pandas.DataFrame
+        """
+        pool = multiprocessing.Pool(processes=core)
+        result = pool.map(_AAC_Buffer, self._Protein_Sequences.values.tolist())
+        df = pandas.concat(result, axis=1)
+        if save_result:
+            self._to_csv(filepath, df)
+        return df
+
+    def FEGS(self, core: int = 1, save_result: bool = True, filepath=None):
         """
         To apply FEGS to the Protein Sequences input
         :param core: the core of CPU to be used
