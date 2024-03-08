@@ -5,6 +5,7 @@ _AAletter = list("ACDEFGHIKLMNPQRSTVWY")
 
 def BF(Protein_Sequence: str) -> pandas.Series:
     A2Index = {_AAletter[index]: index for index in range(20)}
+    A2Index['-'] = 20
     Serieses = [_generateBF(A2Index[char]) for char in Protein_Sequence]
     res = pandas.concat(Serieses)
     return res
@@ -12,7 +13,8 @@ def BF(Protein_Sequence: str) -> pandas.Series:
 
 def _generateBF(index: int):
     res = pandas.Series([0] * 20)
-    res[index] = 1
+    if index < 20:
+        res[index] = 1
     return res
 
 

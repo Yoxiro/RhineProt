@@ -30,7 +30,6 @@ class Sequences:
             filepath=None):
         """
 
-        :param enable_multiprocessing: whether able Multiprocessing
         :param core: the core to be used if Multiprocessing is enabled
         :param save_result: whether save the result
         :param filepath: the filepath
@@ -59,6 +58,8 @@ class Sequences:
         if save_result:
             self._to_csv(filepath, df)
         return df
+    # TODO
+    # The Other Module mp.
 
     def _to_csv(self, filepath="Saved_File.csv", df=None):
         if df is None:

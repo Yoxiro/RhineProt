@@ -1,3 +1,9 @@
-import numpy
-dpc = numpy.array([[[0.0]*3]*20]*20,dtype=float)
-print(dpc.shape)
+import RhineAMP
+
+fa = RhineAMP.FastaRead("AMPdata/uniprotkb_clean_cdhit_remove.fasta")
+
+fa = RhineAMP.FastaPadding(fa)
+
+fa = RhineAMP.BLOSUM_62_fasta(fa)
+
+print(fa)

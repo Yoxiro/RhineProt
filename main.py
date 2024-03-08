@@ -1,9 +1,9 @@
 import RhineAMP
-import pandas
+
 if __name__ == "__main__":
     sequences = RhineAMP.Sequences()
-    sequences.LoadFromFasta("AMPdata/uniprot_clean_cdhit.fasta")
-    sequences.FEGS(core=4)
+    sequences.LoadFromFasta("AMPdata/uniprotkb_clean_cdhit_remove.fasta")
+    sequences.AAC(core=4)
 
     # fa = RhineAMP.FastaRead("AMPdata/uniprot_clean_cdhit.fasta")
     # l = fa.shape[0]
