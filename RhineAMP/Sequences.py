@@ -61,6 +61,20 @@ class Sequences:
     # TODO
     # The Other Module mp.
 
+    def Readfile(self,filepath:str or list,
+                 format:str = "csv",
+                 label:list = None):
+        if type(filepath) != list:
+            filepath = [filepath]
+        if label is None and len(filepath) == 2:
+            label = (0,1)
+        roam = []
+        for file in filepath:
+            df = pandas.read_csv(file,index_col=0).T
+            roam.append(df)
+        result_df = pandas.concat(roam)
+        return result_df
+
     def _to_csv(self, filepath="Saved_File.csv", df=None):
         if df is None:
             if self._df_to_csv is None:

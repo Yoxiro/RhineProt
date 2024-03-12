@@ -19,6 +19,7 @@ def AAC(Protein_Sequence: str,header = None) -> pandas.Series:
                                index=index_string,
                                dtype=float,
                                name=header)
+
     for char in Protein_Sequence:
         if char not in index_string:
             raise Exception("Invalid amino acid symbols")
