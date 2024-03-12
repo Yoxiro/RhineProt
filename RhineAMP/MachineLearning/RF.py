@@ -1,45 +1,54 @@
+#!/usr/bin/env python
+# _*_ coding: utf-8 _*_
 
-import numpy
+import argparse
 import numpy as np
 from RhineAMP.utils import save_file, draw_plot, calculate_prediction_metrics
-from sklearn.neighbors import KNeighborsClassifier
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import StratifiedKFold
 
 
-def KNN_Classifier_binary(X,
-                          y,
-                          fold=5,
-                          n_neighbors=3):
+def RF_Classifier(X, y, fold=5, n_trees=100):
+    """
+    Parameters:
+    ----------
+    :param X: 2-D ndarray
+    :param y: 1-D ndarray
+    :param indep: 2-D ndarray, the first column is labels and the rest are feature values
+    :param fold: int, default 5
+    :param n_trees: int, number of trees, default: 5
+    :param out:
+    :return:
+        info: str, the model parameters
+        cross-validation result: list with element is ndarray
+        independent result: ndarray, the first column is labels and the rest are prediction scores.
+    """
     classes = sorted(list(set(y)))
+
     prediction_result_cv = []
+    prediction_result_ind = np.array([])
+
 
     folds = StratifiedKFold(fold).split(X, y)
-
     for i, (trained, valided) in enumerate(folds):
         train_y, train_X = y[trained], X[trained]
         valid_y, valid_X = y[valided], X[valided]
-        model = KNeighborsClassifier(n_neighbors=n_neighbors).fit(train_X, train_y)
-        scores = model.predict_proba(valid_X)
+        model = RandomForestClassifier(n_estimators=n_trees, bootstrap=False)
+        rfc = model.fit(train_X, train_y)
+        scores = rfc.predict_proba(valid_X)
         tmp_result = np.zeros((len(valid_y), len(classes) + 1))
         tmp_result[:, 0], tmp_result[:, 1:] = valid_y, scores
         prediction_result_cv.append(tmp_result)
-
         # independent
-    header = 'n_neighbors: %d\n' % n_neighbors
+    header = 'n_trees: %d' % n_trees
     return header, prediction_result_cv
-
-
-def KNN(data: numpy.ndarray,
-        label: list or numpy.ndarray,
-        k: int = 3,
-        fold: int = 5,
-        out: str = "KNN_output"):
+def RF(data,
+       label,
+       n_trees:int = 100,
+       fold:int = 5,
+       out:str = "RF_output"):
     X, y = data, label
-
-    para_info, cv_res = KNN_Classifier_binary(X,
-                                              y,
-                                              fold=fold,
-                                              n_neighbors=k)
+    para_info, cv_res= RF_Classifier(X, y,fold=fold, n_trees=n_trees)
 
     classes = sorted(list(set(y)))
     if len(classes) == 2:

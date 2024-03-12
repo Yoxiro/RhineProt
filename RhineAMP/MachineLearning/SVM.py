@@ -45,12 +45,6 @@ def SVM_Classifier(X,
     cvs = np.zeros((X.shape[0], len(classes) + 1))
     folds = StratifiedKFold(fold).split(X, y)
     # todo ind part
-
-    # inds = np.array([])
-    # if indep.shape[0] != 0:
-    #     inds = np.zeros((len(indep), len(classes) + 1))
-    #     inds[:, 0] = indep[:, 0]
-
     prediction_result_cv = []
     for trained, valided in folds:
         train_y, train_X = y[trained], X[trained]
@@ -97,26 +91,7 @@ def SVM(X,
         cost: float = 1.0,
         fold: int = 5,
         out:str = "SVM_output"):
-    # parser = argparse.ArgumentParser(usage="it's usage tip.",
-    #                                  description="Training SVM model.")
-    # parser.add_argument("--train", required=True, help="input training coding file")
-    # parser.add_argument("--indep", help="independent coding file")
-    # parser.add_argument("--format", choices=['tsv', 'svm', 'csv', 'weka'], default='tsv',
-    #                     help="input file format (default tab format)")
-    # parser.add_argument("--kernel", choices=['linear', 'poly', 'rbf', 'sigmoid'], default='rbf',
-    #                     help="SVM kernel type (default rbf kernel)")
-    # parser.add_argument("--auto", action='store_true', help="auto optimize parameters (defalult: False)")
-    # parser.add_argument("--batch", type=float, default=1,
-    #                     help="random select part (batch * samples) samples for parameters optimization")
-    # parser.add_argument("--degree", type=int, default=3, help="set degree in polynomial kernel function (default 3)")
-    # parser.add_argument("--gamma", type=float, help="set gamma in polynomial/rbf/sigmoid kernel function (default 1/k)")
-    # parser.add_argument("--coef0", type=float, default=0,
-    #                     help="set coef0 in polynomial/rbf/sigmoid kernel function (default 0)")
-    # parser.add_argument("--cost", type=float, default=1, help="set the parameter cost value (default 1)")
-    # parser.add_argument("--fold", type=int, default=5,
-    #                     help="n-fold cross validation mode (default 5-fold cross-validation, 1 means jack-knife cross-validation)")
-    # parser.add_argument("--out", default="SVM_output", help="set prefix for output score file")
-    # args = parser.parse_args()
+
     if gamma is None:
         gamma = 'auto'
 
