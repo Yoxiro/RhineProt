@@ -38,18 +38,22 @@ _combined_dict = {
         "group3": "AYHWVMFLIC"
     }
 }
-def _Classification_Validation(Classification:Dict[str,str]):
+
+
+def _Classification_Validation(Classification: Dict[str, str]):
     sum_of_values = sum(
         list(
             map(
-                lambda x:len(x),
+                lambda x: len(x),
                 Classification.values()
             )
         )
     )
     if 20 != sum_of_values:
         raise Exception("Invalid Classification")
-def CTD_C(Protein_Sequence:str,Classification:Dict[str,str] = None)->pandas.Series:
+
+
+def CTD_C(Protein_Sequence: str, Classification: Dict[str, str] = None) -> pandas.Series:
     """
 
     :param Protein_Sequence:
@@ -75,20 +79,20 @@ def CTD_C(Protein_Sequence:str,Classification:Dict[str,str] = None)->pandas.Seri
     for char in t3:
         char2class[char] = 2
 
-    group = {"CTD_TYPE_1":0,
-             "CTD_TYPE_2":0,
-             "CTD_TYPE_3":0}
+    group = {"CTD_TYPE_1": 0,
+             "CTD_TYPE_2": 0,
+             "CTD_TYPE_3": 0}
 
-    ctdc = pandas.Series(group,name="CTD_C",dtype=float)
+    ctdc = pandas.Series(group, name="CTD_C", dtype=float)
     for index in range(len(Protein_Sequence)):
         char = Protein_Sequence[index]
 
         ctdc.iloc[char2class[char]] += 1.0
-    ctdc = ctdc/len(Protein_Sequence)
+    ctdc = ctdc / len(Protein_Sequence)
     return ctdc
 
-def _CTD_C(Protein_Sequence:str,Classification:Dict[str,str]):
 
+def _CTD_C(Protein_Sequence: str, Classification: Dict[str, str])->pandas.Series:
     values = list(Classification.values())
 
     t1 = list(values[0])
@@ -113,50 +117,14 @@ def _CTD_C(Protein_Sequence:str,Classification:Dict[str,str]):
         ctdc.iloc[char2class[char]] += 1.0
     ctdc = ctdc / len(Protein_Sequence)
     return ctdc
-def CTD_T(Protein_Sequence:str,Classification:Dict[str,str]=None):
 
+
+def CTD_T(Protein_Sequence: str, Classification: Dict[str, str] = None)->pandas.Series:
     Protein_Sequence = Protein_Sequence.strip()
     if Classification is None:
         Classification = _combined_dict["hydrophobicity_PRAM900101"]
     else:
         _Classification_Validation(Classification)
-
-    values = list(Classification.values())
-
-    t1 = list(values[0])
-    t2 = list(values[1])
-    t3 = list(values[2])
-    char2class = dict()
-    for char in t1:
-        char2class[char] = 0
-    for char in t2:
-        char2class[char] = 1
-    for char in t3:
-        char2class[char] = 2
-
-    ctdt_temp = pandas.DataFrame([[0]*3]*3, dtype=float)
-
-    for index in range(len(Protein_Sequence)-1):
-        char1 = Protein_Sequence[index]
-        char2 = Protein_Sequence[index+1]
-        # If the former char is the same as thr latter one, then there is no transition
-        if char2 != char1:
-            ctdt_temp.iloc[char2class[char1],char2class[char2]] += 1
-
-    FirstandSecond = ctdt_temp.iloc[0,1] +ctdt_temp.iloc[1,0]
-    FirstandThird = ctdt_temp.iloc[0,2] +ctdt_temp.iloc[2,0]
-    SecondandThird = ctdt_temp.iloc[1,2] +ctdt_temp.iloc[2,1]
-
-    ctdt = pandas.Series([FirstandSecond,
-                          FirstandThird,
-                          SecondandThird],
-                         dtype=float,
-                         index=["Type1_2","Type1_3","Type2_3"],
-                         name = "CTD_T")
-    ctdt = ctdt / (len(Protein_Sequence)-1)
-    return ctdt
-
-def _CTD_T(Protein_Sequence:str,Classification:Dict[str,str]):
 
     values = list(Classification.values())
 
@@ -193,6 +161,149 @@ def _CTD_T(Protein_Sequence:str,Classification:Dict[str,str]):
     ctdt = ctdt / (len(Protein_Sequence) - 1)
     return ctdt
 
+
+def _CTD_T(Protein_Sequence: str, Classification: Dict[str, str])->pandas.Series:
+    values = list(Classification.values())
+
+    t1 = list(values[0])
+    t2 = list(values[1])
+    t3 = list(values[2])
+    char2class = dict()
+    for char in t1:
+        char2class[char] = 0
+    for char in t2:
+        char2class[char] = 1
+    for char in t3:
+        char2class[char] = 2
+
+    ctdt_temp = pandas.DataFrame([[0] * 3] * 3, dtype=float)
+
+    for index in range(len(Protein_Sequence) - 1):
+        char1 = Protein_Sequence[index]
+        char2 = Protein_Sequence[index + 1]
+        # If the former char is the same as thr latter one, then there is no transition
+        if char2 != char1:
+            ctdt_temp.iloc[char2class[char1], char2class[char2]] += 1
+
+    FirstandSecond = ctdt_temp.iloc[0, 1] + ctdt_temp.iloc[1, 0]
+    FirstandThird = ctdt_temp.iloc[0, 2] + ctdt_temp.iloc[2, 0]
+    SecondandThird = ctdt_temp.iloc[1, 2] + ctdt_temp.iloc[2, 1]
+
+    ctdt = pandas.Series([FirstandSecond,
+                          FirstandThird,
+                          SecondandThird],
+                         dtype=float,
+                         index=["Type1_2", "Type1_3", "Type2_3"],
+                         name="CTD_T")
+    ctdt = ctdt / (len(Protein_Sequence) - 1)
+    return ctdt
+
+def CTD_D(Protein_Sequence: str, Classification: Dict[str, str])->pandas.Series:
+
+    Protein_Sequence = Protein_Sequence.strip()
+    if Classification is None:
+        Classification = _combined_dict["hydrophobicity_PRAM900101"]
+    else:
+        _Classification_Validation(Classification)
+
+    values = list(Classification.values())
+
+    t1 = list(values[0])
+    t2 = list(values[1])
+    t3 = list(values[2])
+    char2class = dict()
+    for char in t1:
+        char2class[char] = 0
+    for char in t2:
+        char2class[char] = 1
+    for char in t3:
+        char2class[char] = 2
+
+    seq_dict = {
+        0:dict(),
+        1:dict(),
+        2:dict()
+    }
+    count_dict = {
+        0:0,
+        1:0,
+        2:0
+    }
+    for index in range(len(Protein_Sequence)):
+        char = Protein_Sequence[index]
+        class_num = char2class[char]
+        count_dict[class_num] +=1
+        count_num = count_dict[class_num]
+        seq_dict[class_num][count_num] = index+1
+
+    del class_num
+    del count_num
+    del char
+    res = []
+    for i in range(3):
+        selected_dict = seq_dict[i]
+        total = count_dict[i]
+        ind = [1] + [int(0.25*total*time) for time in range(1,5)]
+        ser = pandas.Series([selected_dict[j] for j in ind],
+                            dtype=float)
+        res.append(ser)
+
+    ctdd = pandas.concat(res)
+    ctdd.index = ["CTDD"+str(i+1) for i in range(ctdd.__len__())]
+    ctdd = ctdd/len(Protein_Sequence)
+    return ctdd
+
+def _CTD_D(Protein_Sequence: str, Classification: Dict[str, str])->pandas.Series:
+    values = list(Classification.values())
+
+    t1 = list(values[0])
+    t2 = list(values[1])
+    t3 = list(values[2])
+    char2class = dict()
+    for char in t1:
+        char2class[char] = 0
+    for char in t2:
+        char2class[char] = 1
+    for char in t3:
+        char2class[char] = 2
+
+    seq_dict = {
+        0: dict(),
+        1: dict(),
+        2: dict()
+    }
+    count_dict = {
+        0: 0,
+        1: 0,
+        2: 0
+    }
+    for index in range(len(Protein_Sequence)):
+        char = Protein_Sequence[index]
+        class_num = char2class[char]
+        count_dict[class_num] += 1
+        count_num = count_dict[class_num]
+        seq_dict[class_num][count_num] = index + 1
+
+    del class_num
+    del count_num
+    del char
+    res = []
+    for i in range(3):
+        selected_dict = seq_dict[i]
+        total = count_dict[i]
+        ind = [1] + [int(0.25 * total * time) for time in range(1, 5)]
+        ser = pandas.Series([selected_dict[j] for j in ind],
+                            dtype=float)
+        res.append(ser)
+
+    ctdd = pandas.concat(res)
+    ctdd.index = ["CTDD" + str(i + 1) for i in range(ctdd.__len__())]
+    ctdd = ctdd / len(Protein_Sequence)
+    return ctdd
+
+
+
+
 if __name__ == "__main__":
     Protein_Sequence = "LLGDFFRKSKEKIGKEFKRIVQRIKDFLRNLVPRTESA"
 
@@ -201,5 +312,5 @@ if __name__ == "__main__":
         "2": 'GASTPHY',
         "3": 'CLVIMFW'
     }
-    x = CTD_T(Protein_Sequence,a)
+    x = CTD_D(Protein_Sequence, a)
     print(x)
