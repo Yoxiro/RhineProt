@@ -17,11 +17,40 @@ def MLP_Classifier(X,
     classes = sorted(list(set(y)))
     folds = StratifiedKFold(fold).split(X, y)
     prediction_result_cv = []
+    param_grid = {
+                  "solver": ['adam', 'sgd', 'lbfgs'],
+                  "verbose": [True,False],
+                  "activation":["identity","logistic","tanh","relu"]
+    }
+    grid_search = GridSearchCV(
+        estimator=MLPClassifier(
+        alpha=1e-05,
+        batch_size='auto',
+        beta_1=0.9,
+        beta_2=0.999,
+        early_stopping=False,
+        epsilon=1e-08,
+        hidden_layer_sizes=hidden_layer_size,
+        learning_rate='constant',
+        learning_rate_init=lr,
+        max_iter=epochs,
+        momentum=0.9,
+        nesterovs_momentum=True,
+        power_t=0.5,
+        random_state=1,
+        shuffle=True,
+        tol=0.0001,
+        validation_fraction=0.1,
+        warm_start=False
+    ),
+        param_grid=param_grid)
+    grid_search.fit(X,y)
+    print("Done")
 
     for trained, valided in folds:
         train_y, train_X = y[trained], X[trained]
         valid_y, valid_X = y[valided], X[valided]
-        model = MLPClassifier(activation=activation,
+        model = MLPClassifier(activation=grid_search.best_params_["activation"],
                               alpha=1e-05,
                               batch_size='auto',
                               beta_1=0.9,
@@ -37,10 +66,10 @@ def MLP_Classifier(X,
                               power_t=0.5,
                               random_state=1,
                               shuffle=True,
-                              solver=lost,
+                              solver=grid_search.best_params_["solver"],
                               tol=0.0001,
                               validation_fraction=0.1,
-                              verbose=False,
+                              verbose=grid_search.best_params_["verbose"],
                               warm_start=False)
         model.fit(train_X, train_y)
         scores = model.predict_proba(valid_X)

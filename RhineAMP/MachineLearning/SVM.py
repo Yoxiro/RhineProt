@@ -4,7 +4,7 @@ import numpy as np
 import pandas
 from sklearn import svm
 from sklearn.model_selection import StratifiedKFold, GridSearchCV
-from RhineAMP.utils import read_code_ml, save_file, draw_plot, calculate_prediction_metrics
+from RhineAMP.utils import  save_file, draw_plot, calculate_prediction_metrics
 
 def SVM_Classifier(X,
                    y,
@@ -80,8 +80,6 @@ def SVM_Classifier(X,
 
 def SVM(X,
         y,
-        indep: None,
-        format: str = "csv",
         kernel: str = "rbf",
         auto_opt: bool = True,
         batch: float = 1.0,

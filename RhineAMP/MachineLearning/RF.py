@@ -5,7 +5,7 @@ import argparse
 import numpy as np
 from RhineAMP.utils import save_file, draw_plot, calculate_prediction_metrics
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import StratifiedKFold
+from sklearn.model_selection import StratifiedKFold,GridSearchCV
 
 
 def RF_Classifier(X, y, fold=5, n_trees=100):
@@ -26,14 +26,25 @@ def RF_Classifier(X, y, fold=5, n_trees=100):
     classes = sorted(list(set(y)))
 
     prediction_result_cv = []
-    prediction_result_ind = np.array([])
 
-
+    param_dict = [
+        {"n_estimators" : [i for i in range(50,260,10)],
+         "max_depth" : [i for i in range(5,25)]}
+    ]
+    grid_search = GridSearchCV(estimator=RandomForestClassifier(),
+                               param_grid = param_dict,
+                               cv=5,
+                               n_jobs=4)
+    grid_search.fit(X,y)
+    print("Grid_Search_done")
+    print(grid_search.best_params_)
     folds = StratifiedKFold(fold).split(X, y)
     for i, (trained, valided) in enumerate(folds):
         train_y, train_X = y[trained], X[trained]
         valid_y, valid_X = y[valided], X[valided]
-        model = RandomForestClassifier(n_estimators=n_trees, bootstrap=False)
+        model = RandomForestClassifier(n_estimators=grid_search.best_params_["n_estimators"],
+                                       max_depth=grid_search.best_params_["max_depth"],
+                                       bootstrap=False)
         rfc = model.fit(train_X, train_y)
         scores = rfc.predict_proba(valid_X)
         tmp_result = np.zeros((len(valid_y), len(classes) + 1))
